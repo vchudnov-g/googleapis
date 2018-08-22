@@ -58,6 +58,27 @@ interfaces:
     retry_codes_name: idempotent
     retry_params_name: default
     timeout_millis: 30000
+    sample_value_sets:
+    - id: batman
+      title: "Analyzing Batman Sentiment"
+      description: "Proof of concept for analyzing sentiment"
+      parameters:
+        defaults:
+        - document.type=PLAIN_TEXT
+        - document.content="I am Batman!!"
+      on_success:
+      - define: sentiment=$resp.document_sentiment
+      - print:
+        - "Score: %s"
+        - sentiment.score
+      - print:
+        - "Magnitude: %s"
+        - sentiment.magnitude
+    samples:
+      standalone:
+      - calling_forms: ".*"
+        value_sets: batman
+        region_tag: "batman_sentiment"
   - name: AnalyzeEntities
     flattening:
       groups:
@@ -70,6 +91,52 @@ interfaces:
     retry_codes_name: idempotent
     retry_params_name: default
     timeout_millis: 30000
+    sample_value_sets:
+    - id: batman
+      title: "Analyzing Batman Entity"
+      description: "Proof of concept for analyzing entity"
+      parameters:
+        defaults:
+        - document.type=PLAIN_TEXT
+        - document.content="I like Batman. I think he is slightly more awesome than Chuck Norris."
+      on_success:
+      - loop:
+          collection: $resp.entities
+          variable: entity
+          body:
+          - print:
+            - "Name: %s"
+            - entity.name
+          - loop:
+              collection: entity.mentions
+              variable: mention
+              body:
+              - print:
+                - "Begin offset: %s"
+                - mention.text.begin_offset
+              - print:
+                - "Content: %s"
+                - mention.text.content
+              - print:
+                - "Magnitude: %s"
+                - mention.sentiment.magnitude
+              - print:
+                - "Sentiment: %s"
+                - mention.sentiment.score
+              - print:
+                - "Type: %s"
+                - mention.type
+          - print:
+            - "Salience: %s"
+            - entity.salience
+          - print:
+            - "Sentiment: %s"
+            - entity.sentiment
+    samples:
+      standalone:
+      - calling_forms: ".*"
+        value_sets: batman
+        region_tag: "batman_entity"
   - name: AnalyzeEntitySentiment
     flattening:
       groups:
